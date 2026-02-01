@@ -1,0 +1,111 @@
+@startuml ER_Diagram
+!define TABLE(name) entity name << (T,#FFAAAA) >>
+!define PK(x) <b><u>x</u></b>
+!define FK(x) <i>x</i>
+
+title SmartHome Platform - ER Diagram
+
+package "smarthome_db" #LightBlue {
+    TABLE(users) {
+        PK(id) : SERIAL
+        --
+        user_id : VARCHAR(100) <<UNIQUE>>
+        email : VARCHAR(255) <<UNIQUE>>
+        password_hash : VARCHAR(255)
+        name : VARCHAR(100)
+        created_at : TIMESTAMP
+        updated_at : TIMESTAMP
+    }
+    
+    TABLE(devices) {
+        PK(id) : SERIAL
+        --
+        device_id : VARCHAR(100) <<UNIQUE>>
+        FK(user_id) : VARCHAR(100) -> users.user_id
+        name : VARCHAR(100)
+        device_type : VARCHAR(50)
+        status : VARCHAR(20) <<online|offline>>
+        created_at : TIMESTAMP
+        updated_at : TIMESTAMP
+    }
+    
+    TABLE(sensors) {
+        PK(id) : SERIAL
+        --
+        name : VARCHAR(100)
+        type : VARCHAR(50)
+        location : VARCHAR(100)
+        value : FLOAT
+        unit : VARCHAR(20)
+        status : VARCHAR(20) <<active|inactive>>
+        last_updated : TIMESTAMP
+        created_at : TIMESTAMP
+    }
+    
+    users ||--o{ devices : "owns"
+}
+
+package "telemetry_db" #LightGreen {
+    TABLE(telemetry) {
+        PK(id) : SERIAL
+        --
+        device_id : VARCHAR(100)
+        type : VARCHAR(50)
+        value : DOUBLE PRECISION
+        unit : VARCHAR(20)
+        timestamp : TIMESTAMP
+        created_at : TIMESTAMP
+    }
+}
+
+package "command_db" #LightYellow {
+    TABLE(commands) {
+        PK(id) : SERIAL
+        --
+        command_id : VARCHAR(100) <<UNIQUE>>
+        device_id : VARCHAR(100)
+        action : VARCHAR(100)
+        params : JSONB
+        status : VARCHAR(20)
+        created_at : TIMESTAMP
+        executed_at : TIMESTAMP
+    }
+}
+
+devices ..> telemetry : "generates\n(via MQTT)"
+devices ..> commands : "receives\n(via MQTT)"
+
+note bottom of devices
+  **device_type:**
+  - temperature_sensor
+  - humidity_sensor
+  - thermostat
+  
+  **status:**
+  - online
+  - offline
+end note
+
+note bottom of commands
+  **status:**
+  - pending (создана)
+  - sent (отправлена в MQTT)
+  - executed (выполнена)
+  - failed (ошибка)
+  
+  **action примеры:**
+  - set_temperature
+  - toggle
+end note
+
+note bottom of telemetry
+  **type:**
+  - temperature
+  - humidity
+  
+  **unit:**
+  - celsius
+  - percent
+end note
+
+@enduml

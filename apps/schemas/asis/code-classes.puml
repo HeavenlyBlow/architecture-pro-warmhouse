@@ -1,0 +1,102 @@
+@startuml Code_Classes_AsIs
+title [C4-L4] Code - Classes (As-Is) - Монолит
+
+skinparam classAttributeIconSize 0
+skinparam classFontStyle bold
+hide empty members
+
+package "handlers" #LightBlue {
+    class SensorHandler <<Handler>> {
+        +DB: *db.DB
+        +TempService: *TemperatureService
+        --
+        +GetSensors(c *gin.Context)
+        +GetSensorByID(c *gin.Context)
+        +CreateSensor(c *gin.Context)
+        +UpdateSensor(c *gin.Context)
+        +DeleteSensor(c *gin.Context)
+        +UpdateSensorValue(c *gin.Context)
+        +GetTemperatureByLocation(c *gin.Context)
+    }
+}
+
+package "services" #LightGreen {
+    class TemperatureService <<Service>> {
+        -apiURL: string
+        -client: *http.Client
+        --
+        +NewTemperatureService(apiURL string)
+        +GetTemperature(location string) TemperatureResponse
+        +GetTemperatureByID(id string) TemperatureResponse
+    }
+    
+    class TemperatureResponse <<DTO>> {
+        +Location: string
+        +Value: float64
+        +Unit: string
+        +Status: string
+        +Timestamp: string
+        +Description: string
+    }
+}
+
+package "db" #LightYellow {
+    class DB <<Repository>> {
+        +Pool: *pgxpool.Pool
+        --
+        +NewDB(connString string) (*DB, error)
+        +Close()
+        +GetSensors(ctx) ([]Sensor, error)
+        +GetSensorByID(ctx, id) (Sensor, error)
+        +CreateSensor(ctx, sensor) (Sensor, error)
+        +UpdateSensor(ctx, id, sensor) (Sensor, error)
+        +DeleteSensor(ctx, id) error
+        +UpdateSensorValue(ctx, id, value, status) error
+    }
+}
+
+package "models" #LightPink {
+    class Sensor <<Entity>> {
+        +ID: int
+        +Name: string
+        +Type: string
+        +Location: string
+        +Value: float64
+        +Unit: string
+        +Status: string
+        +LastUpdated: time.Time
+        +CreatedAt: time.Time
+    }
+    
+    class SensorCreate <<DTO>> {
+        +Name: string
+        +Type: string
+        +Location: string
+        +Unit: string
+    }
+    
+    class SensorUpdate <<DTO>> {
+        +Name: string
+        +Type: string
+        +Location: string
+        +Unit: string
+    }
+}
+
+' Relationships
+SensorHandler --> DB : uses
+SensorHandler --> TemperatureService : calls
+TemperatureService ..> TemperatureResponse : returns
+DB ..> Sensor : returns
+
+note bottom of SensorHandler
+  Все обработчики в одном файле
+  Синхронные вызовы
+end note
+
+note bottom of TemperatureService
+  HTTP клиент к внешнему API
+  Блокирующие вызовы
+end note
+
+@enduml

@@ -1,0 +1,35 @@
+@startuml Sequence_Command
+title Отправка команды устройству (set_temperature)
+
+actor User
+participant "API Gateway" as GW
+participant "Command Service" as CMD
+database "Command DB" as DB
+participant "Mosquitto" as MQTT
+participant "IoT Device" as DEV
+
+User -> GW: POST /api/v1/commands\n{device_id, action, params}
+GW -> CMD: Forward request
+
+CMD -> DB: INSERT command (status=pending)
+DB --> CMD: command_id
+
+CMD -> CMD: Update status = "sent"
+CMD -> MQTT: Publish to\ndevices/{device_id}/commands
+
+MQTT -> DEV: Message: command payload
+DEV -> DEV: Execute command\n(set temperature = 25)
+DEV -> MQTT: Publish to\ncommands/ack\n{command_id, status=executed}
+
+MQTT -> CMD: Message: ack payload
+CMD -> DB: UPDATE status = "executed",\nexecuted_at = NOW()
+
+CMD --> GW: 201 Created\n{command_id, status: "sent"}
+GW --> User: Response
+
+note right of DEV
+  Устройство выполняет команду
+  и отправляет подтверждение
+end note
+
+@enduml

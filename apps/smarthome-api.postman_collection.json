@@ -1,221 +1,568 @@
 {
-    "info": {
-        "_postman_id": "f8e3a123-4567-89ab-cdef-0123456789ab",
-        "name": "Smart Home Sensor API",
-        "description": "A collection for testing the Smart Home Sensor Management API",
-        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-    },
-    "item": [
-        {
-            "name": "Health Check",
-            "request": {
-                "method": "GET",
-                "header": [],
-                "url": {
-                    "raw": "http://localhost:8080/health",
-                    "protocol": "http",
-                    "host": [
-                        "localhost"
-                    ],
-                    "port": "8080",
-                    "path": [
-                        "health"
-                    ]
-                },
-                "description": "Check if the API is running"
-            },
-            "response": []
-        },
-        {
-            "name": "Get All Sensors",
-            "request": {
-                "method": "GET",
-                "header": [],
-                "url": {
-                    "raw": "http://localhost:8080/api/v1/sensors",
-                    "protocol": "http",
-                    "host": [
-                        "localhost"
-                    ],
-                    "port": "8080",
-                    "path": [
-                        "api",
-                        "v1",
-                        "sensors"
-                    ]
-                },
-                "description": "Retrieve all sensors"
-            },
-            "response": []
-        },
-        {
-            "name": "Get Sensor by ID",
-            "request": {
-                "method": "GET",
-                "header": [],
-                "url": {
-                    "raw": "http://localhost:8080/api/v1/sensors/1",
-                    "protocol": "http",
-                    "host": [
-                        "localhost"
-                    ],
-                    "port": "8080",
-                    "path": [
-                        "api",
-                        "v1",
-                        "sensors",
-                        "1"
-                    ]
-                },
-                "description": "Retrieve a specific sensor by ID"
-            },
-            "response": []
-        },
-        {
-            "name": "Create Sensor",
-            "request": {
-                "method": "POST",
-                "header": [
-                    {
-                        "key": "Content-Type",
-                        "value": "application/json"
-                    }
-                ],
-                "body": {
-                    "mode": "raw",
-                    "raw": "{\n    \"name\": \"Living Room Temperature\",\n    \"type\": \"temperature\",\n    \"location\": \"Living Room\",\n    \"unit\": \"°C\"\n}"
-                },
-                "url": {
-                    "raw": "http://localhost:8080/api/v1/sensors",
-                    "protocol": "http",
-                    "host": [
-                        "localhost"
-                    ],
-                    "port": "8080",
-                    "path": [
-                        "api",
-                        "v1",
-                        "sensors"
-                    ]
-                },
-                "description": "Create a new sensor"
-            },
-            "response": []
-        },
-        {
-            "name": "Update Sensor",
-            "request": {
-                "method": "PUT",
-                "header": [
-                    {
-                        "key": "Content-Type",
-                        "value": "application/json"
-                    }
-                ],
-                "body": {
-                    "mode": "raw",
-                    "raw": "{\n    \"name\": \"Updated Living Room Temperature\",\n    \"type\": \"temperature\",\n    \"location\": \"Living Room\",\n    \"unit\": \"°C\"\n}"
-                },
-                "url": {
-                    "raw": "http://localhost:8080/api/v1/sensors/1",
-                    "protocol": "http",
-                    "host": [
-                        "localhost"
-                    ],
-                    "port": "8080",
-                    "path": [
-                        "api",
-                        "v1",
-                        "sensors",
-                        "1"
-                    ]
-                },
-                "description": "Update an existing sensor"
-            },
-            "response": []
-        },
-        {
-            "name": "Delete Sensor",
-            "request": {
-                "method": "DELETE",
-                "header": [],
-                "url": {
-                    "raw": "http://localhost:8080/api/v1/sensors/1",
-                    "protocol": "http",
-                    "host": [
-                        "localhost"
-                    ],
-                    "port": "8080",
-                    "path": [
-                        "api",
-                        "v1",
-                        "sensors",
-                        "1"
-                    ]
-                },
-                "description": "Delete a sensor"
-            },
-            "response": []
-        },
-        {
-            "name": "Update Sensor Value",
-            "request": {
-                "method": "PATCH",
-                "header": [
-                    {
-                        "key": "Content-Type",
-                        "value": "application/json"
-                    }
-                ],
-                "body": {
-                    "mode": "raw",
-                    "raw": "{\n    \"value\": 22.5,\n    \"status\": \"active\"\n}"
-                },
-                "url": {
-                    "raw": "http://localhost:8080/api/v1/sensors/1/value",
-                    "protocol": "http",
-                    "host": [
-                        "localhost"
-                    ],
-                    "port": "8080",
-                    "path": [
-                        "api",
-                        "v1",
-                        "sensors",
-                        "1",
-                        "value"
-                    ]
-                },
-                "description": "Update a sensor's value and status"
-            },
-            "response": []
-        }
-    ],
-    "event": [
-        {
-            "listen": "prerequest",
-            "script": {
-                "type": "text/javascript",
-                "exec": [
-                    ""
-                ]
-            }
-        },
-        {
-            "listen": "test",
-            "script": {
-                "type": "text/javascript",
-                "exec": [
-                    ""
-                ]
-            }
-        }
-    ],
-    "variable": [
-        {
-            "key": "baseUrl",
-            "value": "http://localhost:8080",
-            "type": "string"
-        }
-    ]
+	"info": {
+		"_postman_id": "smarthome-microservices-collection",
+		"name": "SmartHome Microservices API",
+		"description": "Коллекция для тестирования SmartHome Platform",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Health Checks",
+			"item": [
+				{
+					"name": "Gateway Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/health",
+							"host": ["{{baseUrl}}"],
+							"path": ["health"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Smart Home - v1 Sensors (Legacy)",
+			"item": [
+				{
+					"name": "Get All Sensors",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/sensors",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "sensors"]
+						}
+					}
+				},
+				{
+					"name": "Get Sensor by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/sensors/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "sensors", "1"]
+						}
+					}
+				},
+				{
+					"name": "Create Sensor",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Living Room Temperature\",\n    \"type\": \"temperature\",\n    \"location\": \"living_room\",\n    \"unit\": \"celsius\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/sensors",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "sensors"]
+						}
+					}
+				},
+				{
+					"name": "Update Sensor",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Updated Sensor Name\",\n    \"location\": \"bedroom\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/sensors/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "sensors", "1"]
+						}
+					}
+				},
+				{
+					"name": "Update Sensor Value",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"value\": 23.5,\n    \"status\": \"active\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/sensors/1/value",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "sensors", "1", "value"]
+						}
+					}
+				},
+				{
+					"name": "Delete Sensor",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/sensors/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "sensors", "1"]
+						}
+					}
+				},
+				{
+					"name": "Get Temperature by Location",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/sensors/temperature/living_room",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "sensors", "temperature", "living_room"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Smart Home - v2 Users",
+			"item": [
+				{
+					"name": "Register User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.user_id) {",
+									"    pm.collectionVariables.set(\"userId\", jsonData.user_id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"user@example.com\",\n    \"password\": \"password123\",\n    \"name\": \"Test User\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v2/users/register",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v2", "users", "register"]
+						}
+					}
+				},
+				{
+					"name": "Login User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.token) {",
+									"    pm.collectionVariables.set(\"token\", jsonData.token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"user@example.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v2/users/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v2", "users", "login"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Smart Home - v2 Devices",
+			"item": [
+				{
+					"name": "Get User Devices",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v2/devices",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v2", "devices"]
+						}
+					}
+				},
+				{
+					"name": "Pair Device (bind to user)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.device_id) {",
+									"    pm.collectionVariables.set(\"deviceId\", jsonData.device_id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"device_id\": \"{{deviceId}}\",\n    \"name\": \"Living Room Thermostat\",\n    \"device_type\": \"temperature_sensor\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v2/devices",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v2", "devices"]
+						}
+					}
+				},
+				{
+					"name": "Delete Device",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v2/devices/{{deviceId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v2", "devices", "{{deviceId}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Telemetry Service",
+			"item": [
+				{
+					"name": "Get Telemetry",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/telemetry",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "telemetry"]
+						}
+					}
+				},
+				{
+					"name": "Get Telemetry by Device ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/telemetry?deviceId={{deviceId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "telemetry"],
+							"query": [
+								{
+									"key": "deviceId",
+									"value": "{{deviceId}}"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Latest Telemetry",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/telemetry/{{deviceId}}/latest",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "telemetry", "{{deviceId}}", "latest"]
+						}
+					}
+				},
+				{
+					"name": "Create Telemetry Record",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"deviceId\": \"{{deviceId}}\",\n    \"type\": \"temperature\",\n    \"value\": 23.5,\n    \"unit\": \"celsius\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/telemetry",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "telemetry"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Command Service",
+			"item": [
+				{
+					"name": "Get Commands",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/commands",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "commands"]
+						}
+					}
+				},
+				{
+					"name": "Get Commands by Device",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/commands?device_id={{deviceId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "commands"],
+							"query": [
+								{
+									"key": "device_id",
+									"value": "{{deviceId}}"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Send Command",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.command_id) {",
+									"    pm.collectionVariables.set(\"commandId\", jsonData.command_id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"device_id\": \"{{deviceId}}\",\n    \"action\": \"set_temperature\",\n    \"params\": {\n        \"target\": 25\n    }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/commands",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "commands"]
+						}
+					}
+				},
+				{
+					"name": "Get Command by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/commands/{{commandId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "commands", "{{commandId}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Device Simulator",
+			"description": "Симулятор устройств. Сначала создайте устройство здесь, затем привяжите его в Smart Home v2",
+			"item": [
+				{
+					"name": "1. Create Device in Simulator",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.device_id) {",
+									"    pm.collectionVariables.set(\"deviceId\", jsonData.device_id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"device_id\": \"thermo-001\",\n    \"device_type\": \"temperature_sensor\",\n    \"name\": \"Simulated Thermostat\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/simulator/devices",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "simulator", "devices"]
+						}
+					}
+				},
+				{
+					"name": "2. Get Available Devices",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/simulator/devices/available",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "simulator", "devices", "available"]
+						}
+					}
+				},
+				{
+					"name": "Get All Simulated Devices",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/simulator/devices",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "simulator", "devices"]
+						}
+					}
+				},
+				{
+					"name": "Check Device Availability",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/simulator/devices/{{deviceId}}/available",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "simulator", "devices", "{{deviceId}}", "available"]
+						}
+					}
+				},
+				{
+					"name": "Send Manual Telemetry",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"device_id\": \"{{deviceId}}\",\n    \"type\": \"temperature\",\n    \"value\": 24.5,\n    \"unit\": \"celsius\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/simulator/devices/{{deviceId}}/telemetry",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "simulator", "devices", "{{deviceId}}", "telemetry"]
+						}
+					}
+				},
+				{
+					"name": "Remove Simulated Device",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/simulator/devices/{{deviceId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "simulator", "devices", "{{deviceId}}"]
+						}
+					}
+				}
+			]
+		}
+	]
 }

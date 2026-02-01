@@ -1,35 +1,136 @@
-version: '3.8'
-
 services:
+  nginx:
+    image: nginx:alpine
+    container_name: smarthome-gateway
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - smart-home
+      - telemetry-service
+      - command-service
+      - device-simulator
+    networks:
+      - smarthome-network
+    restart: unless-stopped
+
   postgres:
     image: postgres:16-alpine
     container_name: smarthome-postgres
-  ## тут нужно добавить настройки
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_MULTIPLE_DATABASES: smarthome,telemetry,command
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-databases.sh:/docker-entrypoint-initdb.d/init-databases.sh:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - smarthome-network
+    restart: unless-stopped
 
-  temperature-api:
-  ## тут нужно добавить приложение
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: smarthome-mosquitto
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_log:/mosquitto/log
+    networks:
+      - smarthome-network
+    restart: unless-stopped
 
-  app:
+  smart-home:
     build:
       context: ./smart_home
       dockerfile: Dockerfile
-    container_name: smarthome-app
+    container_name: smarthome-api
     depends_on:
       postgres:
         condition: service_healthy
-      temperature-api:
+      mosquitto:
         condition: service_started
     environment:
       - DATABASE_URL=postgres://postgres:postgres@postgres:5432/smarthome
-      - TEMPERATURE_API_URL=http://temperature-api:8081
+      - MQTT_BROKER=mosquitto:1883
+      - PORT=:8081
     ports:
-      - "8080:8080"
-    restart: unless-stopped
+      - "8081:8081"
     networks:
       - smarthome-network
+    restart: unless-stopped
+
+  telemetry-service:
+    build:
+      context: ./telemetry-service
+      dockerfile: Dockerfile
+    container_name: smarthome-telemetry
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mosquitto:
+        condition: service_started
+    environment:
+      - DATABASE_URL=Host=postgres;Database=telemetry;Username=postgres;Password=postgres
+      - MQTT_BROKER=mosquitto
+      - MQTT_PORT=1883
+      - ASPNETCORE_URLS=http://+:8082
+    ports:
+      - "8082:8082"
+    networks:
+      - smarthome-network
+    restart: unless-stopped
+
+  command-service:
+    build:
+      context: ./command-service
+      dockerfile: Dockerfile
+    container_name: smarthome-command
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mosquitto:
+        condition: service_started
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/command
+      - MQTT_BROKER=mosquitto
+      - MQTT_PORT=1883
+    ports:
+      - "8083:8083"
+    networks:
+      - smarthome-network
+    restart: unless-stopped
+
+  device-simulator:
+    build:
+      context: ./device-simulator
+      dockerfile: Dockerfile
+    container_name: smarthome-simulator
+    depends_on:
+      mosquitto:
+        condition: service_started
+    environment:
+      - MQTT_BROKER=mosquitto
+      - MQTT_PORT=1883
+    ports:
+      - "8084:8084"
+    networks:
+      - smarthome-network
+    restart: unless-stopped
 
 volumes:
   postgres_data:
+  mosquitto_data:
+  mosquitto_log:
 
 networks:
   smarthome-network:

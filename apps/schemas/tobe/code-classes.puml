@@ -1,0 +1,124 @@
+@startuml Code_Classes_ToBe
+title [C4-L4] Code - Classes (To-Be) - Ключевые компоненты
+
+skinparam classAttributeIconSize 0
+skinparam classFontStyle bold
+hide empty members
+
+package "SmartHome API (Go)" #LightBlue {
+    class UserHandler <<Handler>> {
+        +DB: *db.DB
+        --
+        +Register(c *gin.Context)
+        +Login(c *gin.Context)
+    }
+    
+    class DeviceHandler <<Handler>> {
+        +DB: *db.DB
+        +MQTTPublisher: *MQTTPublisher
+        --
+        +GetDevices(c *gin.Context)
+        +CreateDevice(c *gin.Context)
+        +DeleteDevice(c *gin.Context)
+    }
+    
+    class MQTTPublisher <<Service>> {
+        -client: mqtt.Client
+        --
+        +NewMQTTPublisher(broker string)
+        +PublishDevicePaired(deviceID, userID, ...)
+        +Close()
+    }
+    
+    class DB <<Repository>> {
+        +Pool: *pgxpool.Pool
+        --
+        +CreateUser(ctx, user) User
+        +GetUserByEmail(ctx, email) User
+        +CreateDevice(ctx, userID, device) Device
+        +GetDevicesByUserID(ctx, userID) []Device
+    }
+}
+
+package "Telemetry Service (C#)" #LightGreen {
+    class TelemetryDbContext <<DbContext>> {
+        +Telemetry: DbSet<TelemetryRecord>
+        --
+        +OnConfiguring()
+    }
+    
+    class MqttSubscriberService <<BackgroundService>> {
+        -mqttClient: IMqttClient
+        -dbContext: TelemetryDbContext
+        --
+        +StartAsync(cancellationToken)
+        -OnMessageReceived(payload)
+        -SaveTelemetry(record)
+    }
+    
+    class TelemetryRecord <<Entity>> {
+        +Id: int
+        +DeviceId: string
+        +Type: string
+        +Value: double
+        +Unit: string
+        +Timestamp: DateTime
+    }
+}
+
+package "Command Service (Python)" #LightYellow {
+    class CommandAPI <<FastAPI>> {
+        +db: Database
+        +mqtt: MqttService
+        --
+        +get_commands()
+        +create_command(command)
+        +get_command_by_id(id)
+    }
+    
+    class MqttService <<Service>> {
+        -client: mqtt.Client
+        -on_command_ack: Callable
+        --
+        +connect()
+        +publish_command(device_id, command)
+        +set_command_ack_callback(cb)
+    }
+    
+    class Database <<Repository>> {
+        +pool: asyncpg.Pool
+        --
+        +create_command(command) Command
+        +get_commands() List[Command]
+        +update_command_status(id, status)
+    }
+}
+
+' Relationships
+DeviceHandler --> MQTTPublisher : publishes
+DeviceHandler --> DB : uses
+UserHandler --> DB : uses
+
+MqttSubscriberService --> TelemetryDbContext : saves
+MqttSubscriberService ..> TelemetryRecord : creates
+
+CommandAPI --> Database : uses
+CommandAPI --> MqttService : publishes
+MqttService ..> Database : ack callback
+
+note bottom of MQTTPublisher
+  Публикует события:
+  - devices/paired
+end note
+
+note bottom of MqttSubscriberService
+  Подписан на:
+  - devices/+/telemetry
+end note
+
+note bottom of MqttService
+  Публикует: devices/{id}/commands
+  Подписан: commands/ack
+end note
+
+@enduml

@@ -1,0 +1,26 @@
+@startuml C4_Context_AsIs
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title SmartHome - As-Is System Context (Монолит)
+
+Person(user, "Пользователь", "Управляет отоплением, просматривает температуру")
+
+System(monolith, "SmartHome Monolith", "Go приложение: управление отоплением, мониторинг температуры")
+
+System_Ext(sensors, "IoT Датчики", "Температурные датчики в домах")
+SystemDb_Ext(postgres, "PostgreSQL", "Хранение данных сенсоров")
+
+Rel(user, monolith, "HTTP REST", "Управление, просмотр данных")
+Rel(monolith, postgres, "TCP/IP", "CRUD операции")
+Rel(sensors, monolith, "HTTP", "Отправка показаний температуры")
+
+note right of monolith
+  **Ограничения:**
+  - Синхронное взаимодействие
+  - Монолитная архитектура
+  - Сложно масштабировать
+  - Требует остановки при деплое
+end note
+
+SHOW_LEGEND()
+@enduml

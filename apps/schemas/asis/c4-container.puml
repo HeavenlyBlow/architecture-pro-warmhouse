@@ -1,0 +1,26 @@
+@startuml C4_Container_AsIs
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title SmartHome - As-Is Container Diagram (Монолит)
+
+Person(user, "Пользователь", "Владелец умного дома")
+
+System_Boundary(platform, "SmartHome Platform") {
+    Container(api, "SmartHome API", "Go/Gin", "REST API для управления сенсорами")
+    Container(handlers, "Handlers", "Go", "Обработка HTTP запросов")
+    Container(services, "Services", "Go", "Бизнес-логика")
+    Container(db_layer, "DB Layer", "Go/pgx", "Работа с базой данных")
+    ContainerDb(postgres, "PostgreSQL", "Database", "sensors таблица")
+}
+
+System_Ext(sensors, "IoT Датчики", "Температурные датчики")
+
+Rel(user, api, "HTTPS", "REST API")
+Rel(api, handlers, "Internal", "Route handling")
+Rel(handlers, services, "Internal", "Business logic")
+Rel(services, db_layer, "Internal", "Data access")
+Rel(db_layer, postgres, "TCP", "SQL queries")
+Rel(sensors, api, "HTTP", "Temperature readings")
+
+SHOW_LEGEND()
+@enduml
