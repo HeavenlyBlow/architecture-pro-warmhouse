@@ -1,31 +1,40 @@
 #!/bin/bash
 
-# Exit on any error
 set -e
 
-echo "Starting the Smart Home Sensor API..."
-echo "Building and starting containers..."
-docker-compose up --build -d
+echo "=========================================="
+echo "  SmartHome Platform - Initialization"
+echo "=========================================="
 
-echo "Waiting for services to be ready..."
-# Wait for PostgreSQL to be ready
-for i in {1..30}; do
-  if docker exec smarthome-postgres pg_isready -U postgres > /dev/null 2>&1; then
-    echo "PostgreSQL is ready!"
-    break
-  fi
-  echo "Waiting for PostgreSQL to start... ($i/30)"
-  sleep 1
-done
+cd "$(dirname "$0")"
 
-# Check if PostgreSQL is ready
-if ! docker exec smarthome-postgres pg_isready -U postgres > /dev/null 2>&1; then
-  echo "Error: PostgreSQL did not start within the expected time."
-  exit 1
-fi
-
-echo "All services are up and running!"
-echo "The API is available at http://localhost:8080"
 echo ""
-echo "To view logs, run: docker-compose logs -f"
-echo "To stop the services, run: docker-compose down"
+echo "[1/3] Building services..."
+docker-compose build
+
+echo ""
+echo "[2/3] Starting services..."
+docker-compose up -d
+
+echo ""
+echo "[3/3] Waiting for services to be ready..."
+sleep 10
+
+echo ""
+echo "=========================================="
+echo "  Services Started Successfully!"
+echo "=========================================="
+echo ""
+echo "Endpoints:"
+echo "  - Gateway:          http://localhost:8080"
+echo "  - Smart Home API:   http://localhost:8080/api/v1/sensors"
+echo "  - Smart Home v2:    http://localhost:8080/api/v2/"
+echo "  - Telemetry:        http://localhost:8080/api/v1/telemetry"
+echo "  - Commands:         http://localhost:8080/api/v1/commands"
+echo "  - Simulator:        http://localhost:8080/api/v1/simulator"
+echo ""
+echo "Swagger UI:"
+echo "  - Smart Home:       http://localhost:8081/swagger/index.html"
+echo "  - Telemetry:        http://localhost:8082/swagger/index.html"
+echo "  - Commands:         http://localhost:8083/docs"
+echo "  - Simulator:        http://localhost:8084/docs"

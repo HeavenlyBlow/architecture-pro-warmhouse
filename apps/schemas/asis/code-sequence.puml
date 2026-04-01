@@ -1,0 +1,96 @@
+@startuml Code_Sequence_AsIs
+title [C4-L4] Sequence (As-Is) - Sensor Queries
+
+actor User
+participant "Gin Router" as Router
+participant "handlers.SensorHandler" as H
+participant "db.DB" as DB
+database "PostgreSQL" as PG
+participant "services.TemperatureService\n(HTTP client)" as TS
+participant "Temperature API\n(external)" as TAPI
+
+User -> Router : HTTP request
+Router -> H : route to handler
+
+alt GET /api/v1/sensors
+    H -> DB : GetSensors(ctx)
+    DB -> PG : SELECT id, name, type, location, value,\nunit, status, last_updated, created_at\nFROM sensors ORDER BY id
+    PG --> DB : rows
+    DB --> H : []Sensor
+
+    loop for each sensor in sensors
+        opt sensor.Type == "temperature"
+            H -> TS : GetTemperatureByID(sensor.ID)
+            TS -> TAPI : GET /temperature/{id}
+            alt 200 OK
+                TAPI --> TS : TemperatureResponse (JSON)
+                TS --> H : TemperatureResponse
+                H -> H : update Sensor.Value/Status/LastUpdated
+            else error / non-200
+                TAPI --> TS : error
+                TS --> H : error
+                H -> H : log error, keep DB value
+            end
+        end
+    end
+
+    H --> Router : 200 OK + sensors[]
+    Router --> User : JSON sensors[]
+
+else GET /api/v1/sensors/{id}
+    H -> H : parse id (strconv.Atoi)
+    alt invalid id
+        H --> Router : 400 Bad Request
+        Router --> User : 400
+    else valid id
+        H -> DB : GetSensorByID(ctx, id)
+        DB -> PG : SELECT ... FROM sensors WHERE id=$1
+        alt not found
+            PG --> DB : error
+            DB --> H : error
+            H --> Router : 404 Not Found
+            Router --> User : 404
+        else found
+            PG --> DB : row
+            DB --> H : Sensor
+
+            opt sensor.Type == "temperature"
+                H -> TS : GetTemperatureByID(id)
+                TS -> TAPI : GET /temperature/{id}
+                alt 200 OK
+                    TAPI --> TS : TemperatureResponse
+                    TS --> H : TemperatureResponse
+                    H -> H : update Sensor values
+                else error
+                    TS --> H : error
+                    H -> H : log, keep DB value
+                end
+            end
+
+            H --> Router : 200 OK + sensor
+            Router --> User : JSON sensor
+        end
+    end
+
+else GET /api/v1/sensors/temperature/{location}
+    H -> H : read location from path
+    alt location is empty
+        H --> Router : 400 Bad Request
+        Router --> User : 400
+    else ok
+        H -> TS : GetTemperature(location)
+        TS -> TAPI : GET /temperature?location=...
+        alt 200 OK
+            TAPI --> TS : TemperatureResponse
+            TS --> H : TemperatureResponse
+            H --> Router : 200 OK + temperature data
+            Router --> User : JSON
+        else error
+            TS --> H : error
+            H --> Router : 500 Internal Server Error
+            Router --> User : 500
+        end
+    end
+end
+
+@enduml

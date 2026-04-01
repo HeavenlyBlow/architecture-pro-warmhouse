@@ -42,7 +42,15 @@ func (h *SensorHandler) RegisterRoutes(router *gin.RouterGroup) {
 	}
 }
 
-// GetSensors handles GET /api/v1/sensors
+// GetSensors godoc
+// @Summary Get all sensors
+// @Description Get list of all sensors
+// @Tags sensors
+// @Accept json
+// @Produce json
+// @Success 200 {array} models.Sensor
+// @Failure 500 {object} map[string]string
+// @Router /api/v1/sensors [get]
 func (h *SensorHandler) GetSensors(c *gin.Context) {
 	sensors, err := h.DB.GetSensors(context.Background())
 	if err != nil {
@@ -69,7 +77,17 @@ func (h *SensorHandler) GetSensors(c *gin.Context) {
 	c.JSON(http.StatusOK, sensors)
 }
 
-// GetSensorByID handles GET /api/v1/sensors/:id
+// GetSensorByID godoc
+// @Summary Get sensor by ID
+// @Description Get sensor details by ID
+// @Tags sensors
+// @Accept json
+// @Produce json
+// @Param id path int true "Sensor ID"
+// @Success 200 {object} models.Sensor
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Router /api/v1/sensors/{id} [get]
 func (h *SensorHandler) GetSensorByID(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -100,7 +118,17 @@ func (h *SensorHandler) GetSensorByID(c *gin.Context) {
 	c.JSON(http.StatusOK, sensor)
 }
 
-// GetTemperatureByLocation handles GET /api/v1/sensors/temperature/:location
+// GetTemperatureByLocation godoc
+// @Summary Get temperature by location
+// @Description Get temperature data for a specific location
+// @Tags sensors
+// @Accept json
+// @Produce json
+// @Param location path string true "Location"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /api/v1/sensors/temperature/{location} [get]
 func (h *SensorHandler) GetTemperatureByLocation(c *gin.Context) {
 	location := c.Param("location")
 	if location == "" {
@@ -128,7 +156,17 @@ func (h *SensorHandler) GetTemperatureByLocation(c *gin.Context) {
 	})
 }
 
-// CreateSensor handles POST /api/v1/sensors
+// CreateSensor godoc
+// @Summary Create sensor
+// @Description Create a new sensor
+// @Tags sensors
+// @Accept json
+// @Produce json
+// @Param sensor body models.SensorCreate true "Sensor data"
+// @Success 201 {object} models.Sensor
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /api/v1/sensors [post]
 func (h *SensorHandler) CreateSensor(c *gin.Context) {
 	var sensorCreate models.SensorCreate
 	if err := c.ShouldBindJSON(&sensorCreate); err != nil {
@@ -145,7 +183,18 @@ func (h *SensorHandler) CreateSensor(c *gin.Context) {
 	c.JSON(http.StatusCreated, sensor)
 }
 
-// UpdateSensor handles PUT /api/v1/sensors/:id
+// UpdateSensor godoc
+// @Summary Update sensor
+// @Description Update an existing sensor
+// @Tags sensors
+// @Accept json
+// @Produce json
+// @Param id path int true "Sensor ID"
+// @Param sensor body models.SensorUpdate true "Sensor update data"
+// @Success 200 {object} models.Sensor
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /api/v1/sensors/{id} [put]
 func (h *SensorHandler) UpdateSensor(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -168,7 +217,17 @@ func (h *SensorHandler) UpdateSensor(c *gin.Context) {
 	c.JSON(http.StatusOK, sensor)
 }
 
-// DeleteSensor handles DELETE /api/v1/sensors/:id
+// DeleteSensor godoc
+// @Summary Delete sensor
+// @Description Delete a sensor by ID
+// @Tags sensors
+// @Accept json
+// @Produce json
+// @Param id path int true "Sensor ID"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /api/v1/sensors/{id} [delete]
 func (h *SensorHandler) DeleteSensor(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -185,7 +244,18 @@ func (h *SensorHandler) DeleteSensor(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Sensor deleted successfully"})
 }
 
-// UpdateSensorValue handles PATCH /api/v1/sensors/:id/value
+// UpdateSensorValue godoc
+// @Summary Update sensor value
+// @Description Update value and status of a sensor
+// @Tags sensors
+// @Accept json
+// @Produce json
+// @Param id path int true "Sensor ID"
+// @Param value body object true "Value and status"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /api/v1/sensors/{id}/value [patch]
 func (h *SensorHandler) UpdateSensorValue(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {

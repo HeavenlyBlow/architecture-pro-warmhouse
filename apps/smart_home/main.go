@@ -13,49 +13,72 @@ import (
 	"smarthome/handlers"
 	"smarthome/services"
 
+	_ "smarthome/docs"
+
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
+// @title SmartHome API
+// @version 2.0
+// @description SmartHome Platform API - управление умным домом
+// @host localhost:8080
+// @BasePath /
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+
 func main() {
-	// Set up database connection
 	dbURL := getEnv("DATABASE_URL", "postgres://postgres:postgres@localhost:5432/smarthome")
 	database, err := db.New(dbURL)
 	if err != nil {
 		log.Fatalf("Unable to connect to database: %v\n", err)
 	}
 	defer database.Close()
-
 	log.Println("Connected to database successfully")
 
-	// Initialize temperature service
+	mqttBroker := getEnv("MQTT_BROKER", "localhost:1883")
+	var mqttPublisher *services.MQTTPublisher
+	mqttPublisher, err = services.NewMQTTPublisher(mqttBroker)
+	if err != nil {
+		log.Printf("Warning: Failed to connect to MQTT broker: %v\n", err)
+	} else {
+		defer mqttPublisher.Close()
+		log.Printf("Connected to MQTT broker at %s\n", mqttBroker)
+	}
+
 	temperatureAPIURL := getEnv("TEMPERATURE_API_URL", "http://temperature-api:8081")
 	temperatureService := services.NewTemperatureService(temperatureAPIURL)
 	log.Printf("Temperature service initialized with API URL: %s\n", temperatureAPIURL)
 
-	// Initialize router
 	router := gin.Default()
 
-	// Health check endpoint
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
-			"status": "ok",
+			"status":  "ok",
+			"service": "smart-home",
 		})
 	})
 
-	// API routes
-	apiRoutes := router.Group("/api/v1")
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	// Register sensor routes
+	apiV1 := router.Group("/api/v1")
 	sensorHandler := handlers.NewSensorHandler(database, temperatureService)
-	sensorHandler.RegisterRoutes(apiRoutes)
+	sensorHandler.RegisterRoutes(apiV1)
 
-	// Start server
+	apiV2 := router.Group("/api/v2")
+	userHandler := handlers.NewUserHandler(database)
+	userHandler.RegisterRoutes(apiV2)
+
+	deviceHandler := handlers.NewDeviceHandler(database, mqttPublisher)
+	deviceHandler.RegisterRoutes(apiV2)
+
 	srv := &http.Server{
-		Addr:    getEnv("PORT", ":8080"),
+		Addr:    getEnv("PORT", ":8081"),
 		Handler: router,
 	}
 
-	// Start the server in a goroutine
 	go func() {
 		log.Printf("Server starting on %s\n", srv.Addr)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
@@ -63,13 +86,11 @@ func main() {
 		}
 	}()
 
-	// Wait for interrupt signal to gracefully shut down the server
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 	log.Println("Shutting down server...")
 
-	// Create a deadline for server shutdown
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {

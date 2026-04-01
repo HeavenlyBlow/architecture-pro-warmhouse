@@ -1,0 +1,40 @@
+@startuml Sequence_DevicePairing
+title Привязка устройства к пользователю
+
+actor User
+participant "API Gateway" as GW
+participant "SmartHome API" as SH
+database "SmartHome DB" as DB
+participant "Mosquitto" as MQTT
+participant "IoT Device" as DEV
+
+== 1. Регистрация и аутентификация ==
+User -> GW: POST /api/v2/users/register
+GW -> SH: Forward
+SH -> DB: INSERT user
+SH --> User: user_id
+
+User -> GW: POST /api/v2/users/login
+GW -> SH: Forward
+SH --> User: JWT token
+
+== 2. Привязка устройства ==
+User -> GW: POST /api/v2/devices\n{device_id, name, device_type}\nAuthorization: Bearer {token}
+GW -> SH: Forward
+
+SH -> SH: Validate JWT
+SH -> DB: INSERT device\n(user_id from JWT)
+DB --> SH: device record
+
+SH -> MQTT: Publish to devices/paired\n{device_id, user_id, ...}
+
+SH --> GW: 201 Created
+GW --> User: Device paired
+
+note right of DEV
+  Устройство подключено
+  к MQTT брокеру и
+  отправляет телеметрию
+end note
+
+@enduml

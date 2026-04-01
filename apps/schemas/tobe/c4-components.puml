@@ -1,0 +1,63 @@
+@startuml C4_Components
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title SmartHome Platform - Component Diagram
+
+Person(user, "Пользователь", "Владелец умного дома")
+
+System_Boundary(platform, "SmartHome Platform") {
+    
+    Container_Boundary(gateway, "API Gateway (Nginx)") {
+        Component(nginx, "Nginx", "Reverse Proxy", "Маршрутизация запросов, балансировка")
+    }
+    
+    Container_Boundary(smarthome, "Smart Home Service (Go)") {
+        Component(auth, "Auth Handler", "Go/Gin", "JWT аутентификация, регистрация")
+        Component(devices_handler, "Device Handler", "Go/Gin", "CRUD устройств пользователя")
+        Component(sensors_handler, "Sensor Handler", "Go/Gin", "Legacy API сенсоров (v1)")
+        Component(mqtt_pub, "MQTT Publisher", "Paho MQTT", "Публикация событий device_paired")
+    }
+    
+    Container_Boundary(telemetry, "Telemetry Service (C#)") {
+        Component(telemetry_api, "Telemetry API", "ASP.NET Minimal", "REST API телеметрии")
+        Component(mqtt_sub_tel, "MQTT Subscriber", "MQTTnet", "Подписка на devices/+/telemetry")
+    }
+    
+    Container_Boundary(command, "Command Service (Python)") {
+        Component(command_api, "Command API", "FastAPI", "REST API команд")
+        Component(mqtt_cmd, "MQTT Client", "Paho MQTT", "Публикация команд, подписка на ack")
+    }
+    
+    ContainerDb(postgres, "PostgreSQL", "Database", "smarthome, telemetry, command")
+    Container(mosquitto, "Mosquitto", "MQTT Broker", "Асинхронная коммуникация")
+}
+
+System_Ext(devices, "IoT Устройства", "Реальные датчики")
+
+Rel(user, nginx, "HTTPS", "REST API")
+
+Rel(nginx, auth, "HTTP", "/api/v2/users/*")
+Rel(nginx, devices_handler, "HTTP", "/api/v2/devices")
+Rel(nginx, sensors_handler, "HTTP", "/api/v1/sensors")
+Rel(nginx, telemetry_api, "HTTP", "/api/v1/telemetry")
+Rel(nginx, command_api, "HTTP", "/api/v1/commands")
+
+Rel(auth, postgres, "TCP", "users")
+Rel(devices_handler, postgres, "TCP", "devices")
+Rel(sensors_handler, postgres, "TCP", "sensors")
+Rel(devices_handler, mqtt_pub, "Internal", "Publish")
+Rel(mqtt_pub, mosquitto, "MQTT", "devices/paired")
+
+Rel(telemetry_api, postgres, "TCP", "telemetry")
+Rel(mqtt_sub_tel, mosquitto, "MQTT", "devices/+/telemetry")
+Rel(mqtt_sub_tel, postgres, "TCP", "Save telemetry")
+
+Rel(command_api, postgres, "TCP", "commands")
+Rel(command_api, mqtt_cmd, "Internal", "Send command")
+Rel(mqtt_cmd, mosquitto, "MQTT", "devices/{id}/commands")
+Rel(mqtt_cmd, mosquitto, "MQTT", "commands/ack")
+
+Rel(devices, mosquitto, "MQTT", "Telemetry, Commands, Ack")
+
+SHOW_LEGEND()
+@enduml

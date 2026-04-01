@@ -1,0 +1,33 @@
+@startuml Sequence_Telemetry
+title Сбор телеметрии от устройства
+
+participant "IoT Device" as DEV
+participant "Mosquitto" as MQTT
+participant "Telemetry Service" as TEL
+database "Telemetry DB" as DB
+actor User
+participant "API Gateway" as GW
+
+== Периодическая отправка телеметрии ==
+
+DEV -> MQTT: Publish to\ndevices/{device_id}/telemetry\n{type, value, unit, timestamp}
+
+MQTT -> TEL: Message: telemetry payload
+
+TEL -> DB: INSERT telemetry record
+
+note right of TEL
+  Данные сохраняются
+  асинхронно
+end note
+
+== Запрос телеметрии пользователем ==
+
+User -> GW: GET /api/v1/telemetry?deviceId=xxx
+GW -> TEL: Forward request
+TEL -> DB: SELECT * FROM telemetry\nWHERE device_id = xxx
+DB --> TEL: Telemetry records
+TEL --> GW: JSON response
+GW --> User: Telemetry data
+
+@enduml

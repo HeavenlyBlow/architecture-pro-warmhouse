@@ -1,0 +1,26 @@
+@startuml C4_Context_ToBe
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title SmartHome Platform - To-Be System Context (Микросервисы)
+
+Person(user, "Пользователь", "Управляет устройствами, просматривает телеметрию")
+
+System(platform, "SmartHome Platform", "Микросервисная платформа: управление устройствами, телеметрия, команды")
+
+System_Ext(devices, "IoT Устройства", "Датчики температуры, термостаты")
+System_Ext(mosquitto, "Eclipse Mosquitto", "MQTT брокер для асинхронной коммуникации")
+
+Rel(user, platform, "HTTPS", "REST API через Gateway")
+Rel(platform, mosquitto, "MQTT", "Pub/Sub сообщения")
+Rel(mosquitto, devices, "MQTT", "Телеметрия / Команды")
+
+note right of platform
+  **Преимущества:**
+  - Асинхронное взаимодействие (MQTT)
+  - Независимое масштабирование
+  - Polyglot (Go, C#, Python)
+  - Zero-downtime деплой
+end note
+
+SHOW_LEGEND()
+@enduml

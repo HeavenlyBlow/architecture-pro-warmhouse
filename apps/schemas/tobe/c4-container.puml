@@ -1,0 +1,42 @@
+@startuml C4_Container_ToBe
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title SmartHome Platform - To-Be Container Diagram
+
+Person(user, "Пользователь", "Владелец умного дома")
+
+System_Boundary(platform, "SmartHome Platform") {
+    Container(gateway, "API Gateway", "Nginx", "Маршрутизация запросов, reverse proxy")
+    
+    Container(smarthome, "SmartHome API", "Go/Gin", "Пользователи, устройства, legacy sensors (v1)")
+    Container(telemetry, "Telemetry Service", "C#/ASP.NET", "Сбор и хранение телеметрии")
+    Container(command, "Command Service", "Python/FastAPI", "Отправка команд устройствам")
+    
+    ContainerDb(smarthome_db, "SmartHome DB", "PostgreSQL", "users, devices, sensors")
+    ContainerDb(telemetry_db, "Telemetry DB", "PostgreSQL", "telemetry")
+    ContainerDb(command_db, "Command DB", "PostgreSQL", "commands")
+    
+    Container(mosquitto, "Mosquitto", "MQTT Broker", "Асинхронные сообщения")
+}
+
+System_Ext(devices, "IoT Устройства", "Реальные датчики")
+
+Rel(user, gateway, "HTTPS", "REST API")
+
+Rel(gateway, smarthome, "HTTP", "/api/v1/sensors, /api/v2/*")
+Rel(gateway, telemetry, "HTTP", "/api/v1/telemetry")
+Rel(gateway, command, "HTTP", "/api/v1/commands")
+
+Rel(smarthome, smarthome_db, "TCP", "SQL")
+Rel(smarthome, mosquitto, "MQTT", "devices/paired")
+
+Rel(telemetry, telemetry_db, "TCP", "SQL")
+Rel(telemetry, mosquitto, "MQTT", "devices/+/telemetry")
+
+Rel(command, command_db, "TCP", "SQL")
+Rel(command, mosquitto, "MQTT", "devices/{id}/commands, commands/ack")
+
+Rel(devices, mosquitto, "MQTT", "Telemetry, Commands")
+
+SHOW_LEGEND()
+@enduml

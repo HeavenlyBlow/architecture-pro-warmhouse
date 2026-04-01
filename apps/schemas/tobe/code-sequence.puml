@@ -1,0 +1,84 @@
+@startuml Code_Sequence_ToBe
+title [C4-L4] Sequence (To-Be) - Основные сценарии
+
+actor User
+participant "Nginx\nGateway" as GW
+participant "handlers.DeviceHandler" as DH
+participant "db.DB" as DB
+database "PostgreSQL\n(smarthome)" as PG
+participant "services.MQTTPublisher" as MQTT
+participant "Mosquitto\nBroker" as BROKER
+
+User -> GW : HTTP request
+GW -> DH : route to handler
+
+alt POST /api/v2/devices (Привязка устройства)
+    DH -> DH : AuthMiddleware()\nValidate JWT, extract user_id
+    alt invalid token
+        DH --> GW : 401 Unauthorized
+        GW --> User : 401
+    else valid token
+        DH -> DH : parse request body\n{device_id, name, device_type}
+        
+        DH -> DB : CreateDevice(ctx, userID, deviceCreate)
+        DB -> PG : INSERT INTO devices\n(device_id, user_id, name, device_type, status)\nVALUES ($1, $2, $3, $4, 'online')
+        
+        alt constraint violation (device exists)
+            PG --> DB : error
+            DB --> DH : error
+            DH --> GW : 500 Internal Error
+            GW --> User : 500
+        else success
+            PG --> DB : RETURNING device
+            DB --> DH : Device
+            
+            DH -> MQTT : PublishDevicePaired(\n  deviceID, userID, deviceType, name)
+            MQTT -> BROKER : Publish to\n"devices/paired"\n{event, device_id, user_id, ...}
+            BROKER --> MQTT : ack
+            
+            DH --> GW : 201 Created + DeviceResponse
+            GW --> User : JSON device
+        end
+    end
+
+else GET /api/v2/devices (Получить устройства пользователя)
+    DH -> DH : AuthMiddleware()\nValidate JWT, extract user_id
+    alt invalid token
+        DH --> GW : 401 Unauthorized
+        GW --> User : 401
+    else valid token
+        DH -> DB : GetDevicesByUserID(ctx, userID)
+        DB -> PG : SELECT * FROM devices\nWHERE user_id = $1\nORDER BY created_at DESC
+        PG --> DB : rows
+        DB --> DH : []Device
+        
+        DH -> DH : map to []DeviceResponse
+        DH --> GW : 200 OK + devices[]
+        GW --> User : JSON devices[]
+    end
+
+else DELETE /api/v2/devices/{id}
+    DH -> DH : AuthMiddleware()
+    alt invalid token
+        DH --> GW : 401 Unauthorized
+        GW --> User : 401
+    else valid token
+        DH -> DH : parse device_id from path
+        DH -> DB : DeleteDevice(ctx, deviceID, userID)
+        DB -> PG : DELETE FROM devices\nWHERE device_id = $1 AND user_id = $2
+        
+        alt not found / access denied
+            PG --> DB : 0 rows affected
+            DB --> DH : error
+            DH --> GW : 404 Not Found
+            GW --> User : 404
+        else success
+            PG --> DB : 1 row affected
+            DB --> DH : nil
+            DH --> GW : 200 OK {message}
+            GW --> User : 200
+        end
+    end
+end
+
+@enduml
